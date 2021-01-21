@@ -47,3 +47,7 @@ def search():
   matches = [{"name": person['name'], "img_url": person['img_url']}
              for person in persons if compare_faces(person['image_enc'], image_file_enc)]
   return jsonify(matches)
+
+
+if __name__ == "__main__":
+  server.run(host="0.0.0.0", port=4000)
