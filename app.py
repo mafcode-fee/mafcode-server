@@ -41,7 +41,7 @@ def search():
   persons = [{
       "image_enc": load_and_encode(p_img),
       "name": p_img.split("$$")[0].split("/")[-1],
-      "img_url": f"/img/{p_img}"
+      "img_url": f"/img/" + p_img.split("/")[-1]
   } for p_img in glob('data/*')]
   image_file_enc = load_and_encode(image_file)
   matches = [{"name": person['name'], "img_url": person['img_url']}
