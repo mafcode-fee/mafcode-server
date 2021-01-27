@@ -2,8 +2,8 @@ import face_recognition
 from face_recognition.api import face_encodings
 from flask import Flask, request, send_from_directory, jsonify
 from glob import glob
+from werkzeug.utils import secure_filename
 import uuid
-import json
 
 server = Flask(__name__)
 
@@ -21,7 +21,7 @@ def test():
 
 @server.route('/img/<filename>', methods=["GET"])
 def img(filename):
-  return send_from_directory('data', filename)
+  return send_from_directory('data', secure_filename(filename))
 
 @server.route('/add', methods=["POST"])
 def add():
