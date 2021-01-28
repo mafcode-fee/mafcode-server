@@ -1,8 +1,6 @@
 import face_recognition
-from face_recognition.api import face_encodings
-from flask import Flask, request, send_from_directory, jsonify
+from flask import Flask, json, request, send_from_directory, jsonify
 from glob import glob
-from werkzeug.utils import secure_filename
 import uuid
 
 server = Flask(__name__)
@@ -21,13 +19,14 @@ def test():
 
 @server.route('/img/<filename>', methods=["GET"])
 def img(filename):
-  return send_from_directory('data', secure_filename(filename))
+  return send_from_directory('data', filename)
 
 @server.route('/add', methods=["POST"])
 def add():
   image_file = request.files.get('image')
   name = request.form.get('name')
   file_name = f'{name}$${uuid.uuid1()}$${image_file.filename}'
+  file_name = file_name
   image_file.save(f'./data/{file_name}')
   return {
       "name": name,
@@ -45,7 +44,8 @@ def search():
   } for p_img in glob('data/*')]
   image_file_enc = load_and_encode(image_file)
   matches = [{"name": person['name'], "img_url": person['img_url']}
-             for person in persons if compare_faces(person['image_enc'], image_file_enc)]
+             for person in persons
+             if compare_faces(person['image_enc'], image_file_enc)]
   return jsonify(matches)
 
 
