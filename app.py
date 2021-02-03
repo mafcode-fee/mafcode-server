@@ -11,10 +11,18 @@ import json
 import models
 server = Flask(__name__)
 
-os.makedirs("./data/files", exist_ok=True)
+
+def get_from_env_or(key, deafult):
+  return os.environ.get(key) if key in os.environ else deafult
+
+
+FILES_DIR = get_from_env_or(key="FILES_DIR", deafult="./data/files")
+DB_HOST = get_from_env_or(key="DB_HOST", deafult="localhost")
+# os.makedirs("./data/files", exist_ok=True)
 
 server.config['MONGODB_SETTINGS'] = {
     "db": "mafcode",
+    "host": DB_HOST
 }
 db = MongoEngine(server)
 
@@ -35,14 +43,14 @@ def test():
 
 @server.route('/img/<image_id>', methods=["GET"])
 def img(image_id):
-  return send_from_directory('data/files', image_id)
+  return send_from_directory(FILES_DIR, image_id)
 
 def add_report(type: models.ReportTypes):
   data = validate_json(request.form.get('payload'), schemas.REPORT)
   image_file = request.files.get('image')
   image_ext = image_file.filename.split(".")[-1]
   image_id = str(uuid.uuid4()) + '.' + image_ext
-  image_file.save(f'./data/files/{image_id}')
+  image_file.save(os.path.join(FILES_DIR, image_id))
   report = models.Report(
       report_type=type,
       name=data.get("name"),
@@ -65,7 +73,7 @@ def add_found_report():
 @server.route('/reports/<report_id>/matchings', methods=["GET"])
 def get_matching_reports(report_id):
   report = models.Report.objects.get(id=report_id)
-  report_image_enc = load_and_encode(f'./data/files/{report.photo_id}')
+  report_image_enc = load_and_encode(os.path.join(FILES_DIR, report.photo_id))
 
   target_report_type = models.ReportTypes.FOUND
   if report.report_type == models.ReportTypes.FOUND:
@@ -74,12 +82,13 @@ def get_matching_reports(report_id):
   target_reports = models.Report.objects(report_type=target_report_type).all()
   image_encodings_w_reports = [{
       "report": r,
-      "enc": load_and_encode(f'./data/files/{r.photo_id}')
+      "enc": load_and_encode(os.path.join(FILES_DIR, r.photo_id))
   } for r in target_reports]
   matches = [json.loads(enc_r["report"].to_json())
              for enc_r in image_encodings_w_reports
              if compare_faces(enc_r['enc'], report_image_enc)]
   return Response(json.dumps(matches), mimetype='application/json')
+
 
 if __name__ == "__main__":
   server.run(host="0.0.0.0", port=4000)

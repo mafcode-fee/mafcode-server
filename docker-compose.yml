@@ -1,0 +1,19 @@
+version: "3.9"
+services:
+  app:
+    build: .
+    environment:
+      - FILES_DIR=/data/files
+      - DB_HOST=database
+    ports:
+      - 4000:4000
+    volumes:
+      - ./prod_data/files:/data/files
+    depends_on:
+      - database
+  database:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - ./prod_data/db:/data/db
