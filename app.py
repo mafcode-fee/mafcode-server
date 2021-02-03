@@ -81,31 +81,5 @@ def get_matching_reports(report_id):
              if compare_faces(enc_r['enc'], report_image_enc)]
   return Response(json.dumps(matches), mimetype='application/json')
 
-
-# @server.route('/add', methods=["POST"])
-# def add():
-#   image_file = request.files.get('image')
-#   name = request.form.get('name')
-#   file_name = f'{name}$${uuid.uuid1()}$${image_file.filename}'
-#   file_name = file_name
-#   image_file.save(f'./data/{file_name}')
-#   return {
-#       "name": name,
-#       "img_url": f"/img/{file_name}",
-#   }
-
-# @server.route('/search', methods=["POST"])
-# def search():
-#   image_file = request.files.get('image')
-#   persons = [{
-#       "image_enc": load_and_encode(p_img),
-#       "name": p_img.split("$$")[0].split("/")[-1],
-#       "img_url": f"/img/" + p_img.split("/")[-1]
-#   } for p_img in glob('data/*')]
-#   image_file_enc = load_and_encode(image_file)
-#   matches = [{"name": person['name'], "img_url": person['img_url']}
-#              for person in persons
-#              if compare_faces(person['image_enc'], image_file_enc)]
-#   return jsonify(matches)
 if __name__ == "__main__":
   server.run(host="0.0.0.0", port=4000)
