@@ -10,5 +10,5 @@ REPORT = {
         'clothing': {'type': 'string'},
         'notes': {'type': 'string'},
     },
-    'required': ['name', 'last_seen_location', 'age']
+    'required': ['name', 'age']
 }
