@@ -18,7 +18,8 @@ def get_from_env_or(key, deafult):
 
 FILES_DIR = get_from_env_or(key="FILES_DIR", deafult="./data/files")
 DB_HOST = get_from_env_or(key="DB_HOST", deafult="localhost")
-# os.makedirs("./data/files", exist_ok=True)
+
+os.makedirs(FILES_DIR, exist_ok=True)
 
 server.config['MONGODB_SETTINGS'] = {
     "db": "mafcode",
@@ -69,6 +70,16 @@ def add_missing_report():
 @server.route('/reports/found', methods=["POST"])
 def add_found_report():
   return add_report(models.ReportTypes.FOUND)
+
+@server.route('/reports', methods=["GET"])
+def get_all_reports():
+  reports = models.Report.objects.all()
+  return Response(reports.to_json(), mimetype='application/json')
+
+@server.route('/reports/<report_id>', methods=["GET"])
+def get_report(report_id):
+  report = models.Report.objects.get(id=report_id)
+  return Response(report.to_json(), mimetype='application/json')
 
 @server.route('/reports/<report_id>/matchings', methods=["GET"])
 def get_matching_reports(report_id):
