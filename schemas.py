@@ -3,12 +3,8 @@ REPORT = {
     'properties': {
         'name': {'type': 'string'},
         'last_seen_location': {
-            'type': 'object',
-            'properties': {
-                'lat': {'type': 'number'},
-                'lng': {'type': 'number'},
-            },
-            'required': ['lat', 'lng']
+            'type': 'array',
+            'items': [{'type': 'number'}, {'type': 'number'}],
         },
         'age': {'type': 'number'},
         'clothing': {'type': 'string'},
