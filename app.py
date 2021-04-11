@@ -101,5 +101,74 @@ def get_matching_reports(report_id):
   return Response(json.dumps(matches), mimetype='application/json')
 
 
+
+
+
+
+
+############################## Auth #######################################
+
+import urllib
+import pymongo
+from flask import Flask, request, jsonify
+import jwt
+
+client = pymongo.MongoClient("mongodb+srv://FEE-Force:"+urllib.parse.quote("Q3bF0rWVelm6hubu")+"@cluster0.rfpob.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+# database
+db = client.get_database('auth_database')
+# collection
+Users = pymongo.collection.Collection(db, 'Users')
+# jwt secret
+key = "secret_key"
+
+app = Flask(__name__)
+
+
+@app.route("/register", methods=["POST"])
+def register():
+    email = request.form["email"]
+    # test = User.query.filter_by(email=email).first()
+    check_if_user_exist = Users.find_one({"email": email})
+    if check_if_user_exist:
+        return jsonify(message="User Already Exist"), 409
+    else:
+        first_name = request.form["first_name"]
+        last_name = request.form["last_name"]
+        password = request.form["password"]
+        user_info = dict(first_name=first_name, last_name=last_name, email=email, password=password)
+        Users.insert_one(user_info)
+        return jsonify(message="User added sucessfully"), 201
+
+
+@app.route("/login", methods=["POST"])
+def login():
+    email = request.form["email"]
+    password = request.form["password"]
+
+    check_if_user_exist = Users.find_one({"email": email,"password":password})
+    if check_if_user_exist:
+        token = jwt.encode({"email": email}, key, algorithm="HS256")
+        print(token)
+        return jsonify(message="Login Succeeded!", access_token=token), 201
+    else:
+        return jsonify(message="Incorrect Email or Password"), 401
+   
+
+#@app.route("/protected", methods=["GET"])
+#def dasboard():
+#    token = request.headers.get('Authorization')
+    #jwt_token = token.split(' ')[-1]
+    #print(jwt_token)
+#    data = jwt.decode(token, key, algorithms=["HS256"])
+    #print(data)
+#    current_user = Users.find_one({"email":data['email']})
+#    return jsonify(message="Fee Force Admin Dashboard: "+ current_user["first_name"])
+
+
+
+
+
+
+
 if __name__ == "__main__":
   server.run(host="0.0.0.0", port=4000)
