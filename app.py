@@ -121,7 +121,7 @@ Users = pymongo.collection.Collection(db, 'Users')
 # jwt secret
 key = "secret_key"
 
-app = Flask(__name__)
+#app = Flask(__name__)
 
 
 @app.route("/register", methods=["POST"])
