@@ -113,7 +113,7 @@ import pymongo
 from flask import Flask, request, jsonify
 import jwt
 
-client = pymongo.MongoClient("mongodb+srv://FEE-Force:"+urllib.parse.quote("Q3bF0rWVelm6hubu")+"@cluster0.rfpob.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
+client = pymongo.MongoClient("mongodb+srv://FEE-Force:"+urllib.parse.quote("<password>")+"@cluster0.rfpob.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
 # database
 db = client.get_database('auth_database')
 # collection
