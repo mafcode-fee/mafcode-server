@@ -1,8 +1,13 @@
 import mongoengine_goodjson as good_mongo
 import mongoengine as mongo
 from mongoengine.fields import StringField
-from enum import Enum
+from enum import Enum, unique
 
+class User(good_mongo.Document):
+  email = mongo.StringField(unique=True)
+  password = mongo.StringField()
+  first_name = mongo.StringField()
+  last_name = mongo.StringField()
 
 class Person(good_mongo.Document):
   encodeing_hash = mongo.StringField()
