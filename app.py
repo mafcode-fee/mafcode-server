@@ -27,7 +27,7 @@ os.makedirs(FILES_DIR, exist_ok=True)
 
 server.config['MONGODB_SETTINGS'] = {
     "db": "mafcode",
-    "host": DB_HOST
+    "host": 'localhost'
 }
 db = MongoEngine(server)
 
@@ -107,20 +107,25 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
-  email = request.form["email"]
-  user = models.User.objects.get(email=email)
+  email = request.form.get('email')
+  #return email
+  user = models.User.objects(email=email)
+  #return user
+  
   if user:
     return jsonify(message="User Already Exist"), 409
   else:
     user = models.User(
         email=email,
-        password=request.form["password"],
-        first_name=request.form["first_name"],
-        last_name=request.form["last_name"]
+        password=request.form.get('password'),
+        first_name=request.form.get('first_name'),
+        last_name=request.form.get('last_name')
     )
+  #print('done')
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
+key = "key"
 
 @server.route("/login", methods=["POST"])
 def login():
@@ -129,7 +134,7 @@ def login():
 
   user = models.User.objects.get(email=email, password=password)
   if user:
-    token = jwt.encode({"email": user.email}, key, algorithm="HS256")
+    token = jwt.encode({"email": user.email}, key ,algorithm="HS256")
     print(token)
     return jsonify(message="Login Succeeded!", access_token=token), 201
   else:
@@ -137,4 +142,4 @@ def login():
 
 
 if __name__ == "__main__":
-  server.run(host="0.0.0.0", port=4000)
+  server.run(host="0.0.0.0", port=4000, debug= True)

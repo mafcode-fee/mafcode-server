@@ -4,7 +4,7 @@ from mongoengine.fields import StringField
 from enum import Enum, unique
 
 class User(good_mongo.Document):
-  email = mongo.StringField(unique=True)
+  email = mongo.EmailField(unique=True)
   password = mongo.StringField()
   first_name = mongo.StringField()
   last_name = mongo.StringField()
