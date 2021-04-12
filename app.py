@@ -27,7 +27,7 @@ os.makedirs(FILES_DIR, exist_ok=True)
 
 server.config['MONGODB_SETTINGS'] = {
     "db": "mafcode",
-    "host": 'localhost'
+    "host": DB_HOST
 }
 db = MongoEngine(server)
 
