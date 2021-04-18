@@ -108,12 +108,11 @@ def get_matching_reports(report_id):
 @server.route("/register", methods=["POST"])
 def register():
   email = request.form.get('email')
-  #return email
   user = models.User.objects(email=email)
-  #return user
   
   if user:
-    return jsonify(message="User Already Exist"), 409
+    return jsonify(message="This email already exists"), 409
+  
   else:
     user = models.User(
         email=email,
@@ -121,7 +120,8 @@ def register():
         first_name=request.form.get('first_name'),
         last_name=request.form.get('last_name')
     )
-  #print('done')
+
+  
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
@@ -132,13 +132,25 @@ def login():
   email = request.form["email"]
   password = request.form["password"]
 
-  user = models.User.objects.get(email=email, password=password)
+  user = models.User.objects(email=email).first()
   if user:
-    token = jwt.encode({"email": user.email}, key ,algorithm="HS256")
-    print(token)
-    return jsonify(message="Login Succeeded!", access_token=token), 201
+    if (user.password == password) :
+      token = jwt.encode({"email": user.email}, key ,algorithm="HS256")
+      print(token)
+      return jsonify(message="Login Succeeded!", access_token=token), 201
+    else:
+      return jsonify(message="Incorrect password"), 401
   else:
-    return jsonify(message="Incorrect Email or Password"), 401
+    return jsonify(message="This email isn't registered!! :)"), 401
+
+
+@server.route("/checkDB", methods=["GET"])
+def showDB():
+  dbCheck = []
+  for user in models.User.objects:
+    dbCheck.append(user)
+
+  return jsonify(dbCheck)
 
 
 if __name__ == "__main__":

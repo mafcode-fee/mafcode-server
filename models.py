@@ -2,10 +2,12 @@ import mongoengine_goodjson as good_mongo
 import mongoengine as mongo
 from mongoengine.fields import StringField
 from enum import Enum, unique
+import  re
 
+reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)"
 class User(good_mongo.Document):
-  email = mongo.EmailField(unique=True)
-  password = mongo.StringField()
+  email = mongo.EmailField(required = True,unique=True)
+  password = mongo.StringField(required=True, min_length=8,regex=reg )
   first_name = mongo.StringField()
   last_name = mongo.StringField()
 
