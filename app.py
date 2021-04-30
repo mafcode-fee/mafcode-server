@@ -10,6 +10,7 @@ from glob import glob
 import uuid
 from flask_expects_json import expects_json
 import schemas
+from jsonschema.exceptions import ValidationError
 from jsonschema import validate
 import json
 import models
@@ -41,6 +42,13 @@ def load_and_encode(file):
 
 def compare_faces(f1, f2):
   return face_recognition.compare_faces([f1], f2)[0]
+
+def getFormData():
+  out = {}
+  for keyValue in request.form:
+    out[keyValue] = request.form[keyValue]
+  return out
+
 
 @server.route('/ping')
 def test():
@@ -107,7 +115,13 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
-  email = request.form.get('email')
+  data = getFormData()
+  try:
+    validate(data, schemas.REGISTER)
+  except ValidationError as e:
+    return str(e)
+
+  email = data['email']
   user = models.User.objects(email=email)
   
   if user:
@@ -115,13 +129,11 @@ def register():
   
   else:
     user = models.User(
-        email=email,
-        password=request.form.get('password'),
-        first_name=request.form.get('first_name'),
-        last_name=request.form.get('last_name')
-    )
-
-  
+      email=email,
+      password=request.form.get('password'),
+          first_name=request.form.get('first_name'),
+          last_name=request.form.get('last_name')
+      )
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
@@ -153,5 +165,19 @@ def showDB():
   return jsonify(dbCheck)
 
 
+
+@server.route("/validate", methods=['POST'])
+def validateFormData():
+  data = getFormData()
+  #data = jsonify(data)
+  try:
+    validate(data, schemas.REGISTER)
+  except ValidationError as e:
+    return str(e)
+  
+  return "valid"
+
+
+
 if __name__ == "__main__":
-  server.run(host="0.0.0.0", port=4000)
+  server.run(host="0.0.0.0", port=4000 , debug = True)
