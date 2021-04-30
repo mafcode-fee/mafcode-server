@@ -1,18 +1,34 @@
-REPORT = {
-    'type': 'object',
-    'properties': {
-        'name': {'type': 'string'},
-        'last_seen_location': {
-            'type': 'array',
-            'items': [{'type': 'number'}, {'type': 'number'}],
-        },
-        'age': {'type': 'number'},
-        'clothing': {'type': 'string'},
-        'notes': {'type': 'string'},
-    },
-    'required': ['name', 'age']
+REPORT ={
+   "type":"object",
+   "properties":{
+      "name":{
+         "type":"string"
+      },
+      "latitude":{
+         "type":"number",
+         "minimum":-90,
+         "maximum":90
+      },
+      "longitude":{
+         "type":"number",
+         "minimum":-180,
+         "maximum":180
+      },
+      "age":{
+         "type":"number"
+      },
+      "clothing":{
+         "type":"string"
+      },
+      "notes":{
+         "type":"string"
+      }
+   },
+   "required":[
+      "name",
+      "age"
+   ]
 }
-
 
 REGISTER = {
     'type': 'object',
