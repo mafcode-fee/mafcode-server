@@ -137,7 +137,7 @@ def register():
     return jsonify(message="This email already exists"), 409
   
   else:
-    hashedPassword = generate_password_hash(data["password"])
+    hashedPassword = generate_password_hash(data["password"], method='pbkdf2:sha1', salt_length=8)
     user = models.User(
           email=email,
           password = hashedPassword,
@@ -151,12 +151,14 @@ def register():
 key = "key"
 @server.route("/login", methods=["POST"])
 def login():
-  email = request.form["email"]
-  password = request.form["password"]
+  data = getFormData()
+  email = data["email"]
+  password = data["password"]
 
   user = models.User.objects(email=email).first()
+  #return user.password
   if user:
-    if (user.password == password) :
+    if ( check_password_hash(user.password,password)):
       token = jwt.encode({"email": user.email}, key ,algorithm="HS256")
       print(token)
       return jsonify(message="Login Succeeded!", access_token=token), 201
