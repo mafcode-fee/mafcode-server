@@ -79,6 +79,8 @@ def add_report(type: models.ReportTypes):
       age=data.get("age"),
       clothing=data.get("clothing"),
       notes=data.get("notes"),
+      latitude = data.get("latitude"),
+      longitude = data.get("longitude"),
       photo_id=image_id
   )
   report.save()
