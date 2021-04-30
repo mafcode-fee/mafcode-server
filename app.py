@@ -10,6 +10,7 @@ from glob import glob
 import uuid
 from flask_expects_json import expects_json
 import schemas
+from werkzeug.security import generate_password_hash, check_password_hash
 from jsonschema.exceptions import ValidationError
 from jsonschema import validate
 import json
@@ -128,11 +129,12 @@ def register():
     return jsonify(message="This email already exists"), 409
   
   else:
+    hashedPassword = generate_password_hash(data["password"])
     user = models.User(
-      email=email,
-      password=request.form.get('password'),
-          first_name=request.form.get('first_name'),
-          last_name=request.form.get('last_name')
+          email=email,
+          password = hashedPassword,
+          first_name = data["first_name"],
+          last_name = data["last_name"]
       )
     user.save()
     return jsonify(message="User added sucessfully"), 201
@@ -169,7 +171,6 @@ def showDB():
 @server.route("/validate", methods=['POST'])
 def validateFormData():
   data = getFormData()
-  #data = jsonify(data)
   try:
     validate(data, schemas.REGISTER)
   except ValidationError as e:

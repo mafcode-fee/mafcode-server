@@ -7,7 +7,7 @@ import  re
 reg = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)"
 class User(good_mongo.Document):
   email = mongo.EmailField(required = True,unique=True)
-  password = mongo.StringField(required=True, min_length=8,regex=reg)
+  password = mongo.StringField(required=True)
   first_name = mongo.StringField()
   last_name = mongo.StringField()
 

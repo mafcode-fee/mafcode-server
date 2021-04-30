@@ -22,9 +22,10 @@ REGISTER = {
             'pattern':'^[a-zA-Z0-9+_.-]+@[a-zA-Z0-9.-]+$'
         },
         'password' :{
+            'description':"password must be at least 8 chars, & must contain lowerCase & upperCase letters, & numbers",
             'type':'string',
-            'minimum':8,
-            'maximum':20,
+            'minLength':8,
+            'maxLength':20,
             'pattern':'^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)'
         },
         'first_name' :{
