@@ -50,6 +50,14 @@ def getFormData():
     out[keyValue] = request.form[keyValue]
   return out
 
+def validateWithExHandling(data, schema):
+  try:
+    validate(data, schema)
+  except ValidationError as e:
+    return e
+  
+  return "valid"
+
 
 @server.route('/ping')
 def test():
@@ -116,11 +124,11 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
+  
   data = getFormData()
-  try:
-    validate(data, schemas.REGISTER)
-  except ValidationError as e:
-    return str(e)
+  status = str(validateWithExHandling(data, schemas.REGISTER))
+  if status != "valid":
+    return status
 
   email = data['email']
   user = models.User.objects(email=email)
@@ -139,8 +147,8 @@ def register():
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
-key = "key"
 
+key = "key"
 @server.route("/login", methods=["POST"])
 def login():
   email = request.form["email"]
