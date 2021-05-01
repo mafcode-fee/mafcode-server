@@ -55,7 +55,7 @@ def validateWithExHandling(data, schema):
     validate(data, schema)
   except ValidationError as e:
     return e
-  
+
   return "valid"
 
 
@@ -79,8 +79,8 @@ def add_report(type: models.ReportTypes):
       age=data.get("age"),
       clothing=data.get("clothing"),
       notes=data.get("notes"),
-      latitude = data.get("latitude"),
-      longitude = data.get("longitude"),
+      latitude=data.get("latitude"),
+      longitude=data.get("longitude"),
       photo_id=image_id
   )
   report.save()
@@ -126,26 +126,27 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
-  
+
   data = getFormData()
   status = str(validateWithExHandling(data, schemas.REGISTER))
   if status != "valid":
-    return status
+    return status, 400
 
   email = data['email']
   user = models.User.objects(email=email)
-  
+
   if user:
     return jsonify(message="This email already exists"), 409
-  
+
   else:
-    hashedPassword = generate_password_hash(data["password"], method='pbkdf2:sha1', salt_length=8)
+    hashedPassword = generate_password_hash(
+        data["password"], method='pbkdf2:sha1', salt_length=8)
     user = models.User(
-          email=email,
-          password = hashedPassword,
-          first_name = data["first_name"],
-          last_name = data["last_name"]
-      )
+        email=email,
+        password=hashedPassword,
+        first_name=data["first_name"],
+        last_name=data["last_name"]
+    )
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
@@ -158,10 +159,10 @@ def login():
   password = data["password"]
 
   user = models.User.objects(email=email).first()
-  #return user.password
+  # return user.password
   if user:
-    if ( check_password_hash(user.password,password)):
-      token = jwt.encode({"email": user.email}, key ,algorithm="HS256")
+    if (check_password_hash(user.password, password)):
+      token = jwt.encode({"email": user.email}, key, algorithm="HS256")
       print(token)
       return jsonify(message="Login Succeeded!", access_token=token), 201
     else:
@@ -179,7 +180,6 @@ def showDB():
   return jsonify(dbCheck)
 
 
-
 @server.route("/validate", methods=['POST'])
 def validateFormData():
   data = getFormData()
@@ -187,10 +187,9 @@ def validateFormData():
     validate(data, schemas.REGISTER)
   except ValidationError as e:
     return str(e)
-  
+
   return "valid"
 
 
-
 if __name__ == "__main__":
-  server.run(host="0.0.0.0", port=4000 , debug = True)
+  server.run(host="0.0.0.0", port=4000, debug=True)
