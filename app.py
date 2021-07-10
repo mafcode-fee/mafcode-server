@@ -1,3 +1,4 @@
+from datetime import datetime
 import jwt
 from flask import Flask, request, jsonify
 import pymongo
@@ -15,8 +16,27 @@ from jsonschema.exceptions import ValidationError
 from jsonschema import validate
 import json
 import models
-server = Flask(__name__)
+from functools import wraps
+import datetime
 
+server = Flask(__name__)
+server.config['SECRET_KEY'] = 'key'
+
+def token_required(f):
+  @wraps(f)
+  def decorated(*args,**kwargs):
+    try:
+      token = request.headers['Authorization']
+      token = token.split()[1]
+      token = jwt.decode(token, server.config['SECRET_KEY'], algorithms="HS256")
+    except:
+      return jsonify("Unauthorized"), 401
+    
+    return f(*args,**kwargs)
+
+  return decorated
+    
+    
 
 def get_from_env_or(key, deafult):
   return os.environ.get(key) if key in os.environ else deafult
@@ -52,6 +72,7 @@ def validateWithExHandling(data, schema):
 
 
 @server.route('/ping')
+@token_required
 def test():
   return "pong"
 
@@ -143,8 +164,7 @@ def register():
     return jsonify(message="User added sucessfully"), 201
 
 
-key = "key"
-@server.route("/login", methods=["POST"])
+@server.route("/login", methods=["GET"])
 def login():
   
   try:
@@ -156,7 +176,7 @@ def login():
   # return user.password
   if user:
     if (check_password_hash(user.password, auth['password'])):
-      token = jwt.encode({"email": user.email}, key, algorithm="HS256")
+      token = jwt.encode({"email": user.email , 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15) }, server.config['SECRET_KEY'], algorithm="HS256")
       return jsonify(message="Login Succeeded!", access_token=token), 201
     else:
       return jsonify(message="Incorrect password"), 401
@@ -175,12 +195,8 @@ def showDB():
 
 
 @server.route("/test", methods=['POST', 'GET'])
-def token():
-  data = dict(request.form)
-  user = models.User.objects(email=data["email"]).first()
-  print(user.id)
-  newuser = models.User.objects(id=user.id).first()
-  return jsonify(newuser)
+def Test(): 
+  pass
 
 
 
