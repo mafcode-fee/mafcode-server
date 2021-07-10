@@ -72,15 +72,37 @@ def validateWithExHandling(data, schema):
 
 
 @server.route('/ping')
-@token_required
 def test():
+  """
+  Test the availability of the server
+  """
   return "pong"
 
 @server.route('/img/<image_id>', methods=["GET"])
 def img(image_id):
+  """
+  Retrieve img from the disk using its id
+  """
   return send_from_directory(FILES_DIR, image_id)
 
+@server.route('/reports/missing', methods=["POST"])
+def add_missing_report():
+  """
+  Add a new missing report to the database
+  """
+  return add_report(models.ReportTypes.MISSING)
+
+@server.route('/reports/found', methods=["POST"])
+def add_found_report():
+  """
+  Add a new fonud report to the database
+  """
+  return add_report(models.ReportTypes.FOUND)
+
 def add_report(type: models.ReportTypes):
+  """
+  Add a new report to the database
+  """
   data = validate_json(request.form.get('payload'), schemas.REPORT)
   image_file = request.files.get('image')
   image_ext = image_file.filename.split(".")[-1]
@@ -99,26 +121,27 @@ def add_report(type: models.ReportTypes):
   report.save()
   return Response(report.to_json(), mimetype='application/json')
 
-@server.route('/reports/missing', methods=["POST"])
-def add_missing_report():
-  return add_report(models.ReportTypes.MISSING)
-
-@server.route('/reports/found', methods=["POST"])
-def add_found_report():
-  return add_report(models.ReportTypes.FOUND)
-
 @server.route('/reports', methods=["GET"])
 def get_all_reports():
+  """
+  Retrieve all reports in the system
+  """
   reports = models.Report.objects.all()
   return Response(reports.to_json(), mimetype='application/json')
 
 @server.route('/reports/<report_id>', methods=["GET"])
 def get_report(report_id):
+  """
+  Retrieve report by its id
+  """
   report = models.Report.objects.get(id=report_id)
   return Response(report.to_json(), mimetype='application/json')
 
 @server.route('/reports/<report_id>/matchings', methods=["GET"])
 def get_matching_reports(report_id):
+  """
+  Calculate matching reports of the opposite type
+  """
   report = models.Report.objects.get(id=report_id)
   report_image_enc = load_and_encode(os.path.join(FILES_DIR, report.photo_id))
 
@@ -139,6 +162,9 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
+  """
+  Add new user to the system
+  """
   data = dict(request.form)
   status = validateWithExHandling(data, schemas.REGISTER)
 
@@ -166,7 +192,9 @@ def register():
 
 @server.route("/login", methods=["GET"])
 def login():
-  
+  """
+  Authenticate user to the system, returning thier id.
+  """
   try:
     auth = dict(request.authorization)
   except:
@@ -187,6 +215,9 @@ def login():
 
 @server.route("/checkDB", methods=["GET"])
 def showDB():
+  """
+  Test if the database is working
+  """
   dbCheck = []
   for user in models.User.objects:
     dbCheck.append(user)
