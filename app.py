@@ -44,19 +44,11 @@ def load_and_encode(file):
 def compare_faces(f1, f2):
   return face_recognition.compare_faces([f1], f2)[0]
 
-def getFormData():
-  out = {}
-  for keyValue in request.form:
-    out[keyValue] = request.form[keyValue]
-  return out
-
 def validateWithExHandling(data, schema):
   try:
     validate(data, schema)
   except ValidationError as e:
     return e
-
-  return "valid"
 
 
 @server.route('/ping')
@@ -126,11 +118,11 @@ def get_matching_reports(report_id):
 
 @server.route("/register", methods=["POST"])
 def register():
+  data = dict(request.form)
+  status = validateWithExHandling(data, schemas.REGISTER)
 
-  data = getFormData()
-  status = str(validateWithExHandling(data, schemas.REGISTER))
-  if status != "valid":
-    return status, 400
+  if status != None:
+    return str(status), 400
 
   email = data['email']
   user = models.User.objects(email=email)
@@ -154,21 +146,23 @@ def register():
 key = "key"
 @server.route("/login", methods=["POST"])
 def login():
-  data = getFormData()
-  email = data["email"]
-  password = data["password"]
+  
+  try:
+    auth = dict(request.authorization)
+  except:
+    return jsonify(message="Unauthorized"), 401
 
-  user = models.User.objects(email=email).first()
+  user = models.User.objects(email=auth['username']).first()
   # return user.password
   if user:
-    if (check_password_hash(user.password, password)):
+    if (check_password_hash(user.password, auth['password'])):
       token = jwt.encode({"email": user.email}, key, algorithm="HS256")
-      print(token)
       return jsonify(message="Login Succeeded!", access_token=token), 201
     else:
       return jsonify(message="Incorrect password"), 401
   else:
     return jsonify(message="This email isn't registered!! :)"), 401
+  
 
 
 @server.route("/checkDB", methods=["GET"])
@@ -180,15 +174,14 @@ def showDB():
   return jsonify(dbCheck)
 
 
-@server.route("/validate", methods=['POST'])
-def validateFormData():
-  data = getFormData()
-  try:
-    validate(data, schemas.REGISTER)
-  except ValidationError as e:
-    return str(e)
+@server.route("/test", methods=['POST', 'GET'])
+def token():
+  data = dict(request.form)
+  user = models.User.objects(email=data["email"]).first()
+  print(user.id)
+  newuser = models.User.objects(id=user.id).first()
+  return jsonify(newuser)
 
-  return "valid"
 
 
 if __name__ == "__main__":
