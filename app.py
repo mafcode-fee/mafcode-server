@@ -195,17 +195,14 @@ def login():
   """
   Authenticate user to the system, returning thier id.
   """
-  try:
-    auth = dict(request.authorization)
-  except:
-    return jsonify(message="Unauthorized"), 401
-
-  user = models.User.objects(email=auth['username']).first()
+  data = dict(request.form)
+    
+  user = models.User.objects(email=data['email']).first()
   # return user.password
   if user:
-    if (check_password_hash(user.password, auth['password'])):
-      token = jwt.encode({"email": user.email , 'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=15) }, server.config['SECRET_KEY'], algorithm="HS256")
-      return jsonify(message="Login Succeeded!", access_token=token), 201
+    if (check_password_hash(user.password, data['password'])):
+      token = jwt.encode({"user_id": str(user.id)}, server.config['SECRET_KEY'], algorithm="HS256")
+      return jsonify(message="Login Succeeded! ", access_token=token), 201
     else:
       return jsonify(message="Incorrect password"), 401
   else:
@@ -228,7 +225,6 @@ def showDB():
 @server.route("/test", methods=['POST', 'GET'])
 def Test(): 
   pass
-
 
 
 if __name__ == "__main__":
