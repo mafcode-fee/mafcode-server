@@ -18,6 +18,7 @@ import json
 import models
 from functools import wraps
 import datetime
+from bson.objectid import ObjectId
 
 server = Flask(__name__)
 server.config['SECRET_KEY'] = 'key'
@@ -36,7 +37,7 @@ def token_required(f):
 
   return decorated
     
-    
+
 
 def get_from_env_or(key, deafult):
   return os.environ.get(key) if key in os.environ else deafult
@@ -52,6 +53,7 @@ server.config['MONGODB_SETTINGS'] = {
     "host": DB_HOST
 }
 db = MongoEngine(server)
+
 
 def validate_json(json_string, schema):
   data = json.loads(json_string)
@@ -70,6 +72,17 @@ def validateWithExHandling(data, schema):
   except ValidationError as e:
     return e
 
+def addMatching(report, matches):
+  for match in matches:
+    match_id = ObjectId(match['id'])
+    if match_id not in report.matched_reports:
+      report.matched_reports.append(match_id)
+      m = models.Report.objects.get(id = ObjectId(match['id']))
+      m.matched_reports.append(report.id)
+      report.save()
+      m.save()
+    
+
 
 @server.route('/ping')
 def test():
@@ -86,6 +99,7 @@ def img(image_id):
   return send_from_directory(FILES_DIR, image_id)
 
 @server.route('/reports/missing', methods=["POST"])
+@token_required
 def add_missing_report():
   """
   Add a new missing report to the database
@@ -93,30 +107,35 @@ def add_missing_report():
   return add_report(models.ReportTypes.MISSING)
 
 @server.route('/reports/found', methods=["POST"])
+@token_required
 def add_found_report():
   """
   Add a new fonud report to the database
   """
   return add_report(models.ReportTypes.FOUND)
 
-def add_report(type: models.ReportTypes):
+def add_report(reportType: models.ReportTypes):
   """
   Add a new report to the database
   """
   data = validate_json(request.form.get('payload'), schemas.REPORT)
+  jwt_payload = jwt.decode(request.headers['Authorization'].split()[1], server.config['SECRET_KEY'], algorithms="HS256")
+  user_id = ObjectId(jwt_payload['user_id'])
+  #print(type(user_id))
   image_file = request.files.get('image')
   image_ext = image_file.filename.split(".")[-1]
   image_id = str(uuid.uuid4()) + '.' + image_ext
   image_file.save(os.path.join(FILES_DIR, image_id))
   report = models.Report(
-      report_type=type,
+      report_type=reportType,
       name=data.get("name"),
       age=data.get("age"),
       clothing=data.get("clothing"),
       notes=data.get("notes"),
       latitude=data.get("latitude"),
       longitude=data.get("longitude"),
-      photo_id=image_id
+      photo_id=image_id,
+      creator = user_id
   )
   report.save()
   return Response(report.to_json(), mimetype='application/json')
@@ -157,6 +176,9 @@ def get_matching_reports(report_id):
   matches = [json.loads(enc_r["report"].to_json())
              for enc_r in image_encodings_w_reports
              if compare_faces(enc_r['enc'], report_image_enc)]
+  
+  addMatching(report,matches)
+    
   return Response(json.dumps(matches), mimetype='application/json')
 
 
@@ -184,13 +206,13 @@ def register():
         email=email,
         password=hashedPassword,
         first_name=data["first_name"],
-        last_name=data["last_name"]
+        last_name=data["last_name"], 
     )
     user.save()
     return jsonify(message="User added sucessfully"), 201
 
 
-@server.route("/login", methods=["GET"])
+@server.route("/login", methods=["POST"])
 def login():
   """
   Authenticate user to the system, returning thier id.
@@ -223,8 +245,12 @@ def showDB():
 
 
 @server.route("/test", methods=['POST', 'GET'])
-def Test(): 
-  pass
+def Test():
+  reports = models.Report.objects.all()
+  for report in reports :
+    report.delete()
+
+  return Response(reports.to_json(),mimetype='application/json')
 
 
 if __name__ == "__main__":

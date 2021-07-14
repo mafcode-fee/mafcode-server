@@ -10,6 +10,7 @@ class User(good_mongo.Document):
   password = mongo.StringField(required=True)
   first_name = mongo.StringField()
   last_name = mongo.StringField()
+  contact = mongo.StringField()
 
 class Person(good_mongo.Document):
   encodeing_hash = mongo.StringField()
@@ -24,7 +25,8 @@ class ReportTypes(Enum):
 class Report(good_mongo.Document):
   report_type = mongo.EnumField(ReportTypes, required=True)
   photo_id = mongo.StringField()
-  matched_person = mongo.ObjectIdField()
+  creator = mongo.ObjectIdField()
+  matched_reports = mongo.ListField(mongo.ObjectIdField())
   name = mongo.StringField()
   latitude = mongo.FloatField()
   longitude = mongo.FloatField()
