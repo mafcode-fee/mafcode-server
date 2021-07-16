@@ -19,6 +19,7 @@ import models
 from functools import wraps
 import datetime
 from bson.objectid import ObjectId
+import re
 
 server = Flask(__name__)
 server.config['SECRET_KEY'] = 'key'
@@ -83,6 +84,28 @@ def addMatching(report, matches):
       m.save()
     
 
+def get_user_id_from_token():
+  jwt_payload = jwt.decode(request.headers['Authorization'].split()[1], server.config['SECRET_KEY'], algorithms="HS256")
+  return ObjectId(jwt_payload['user_id'])
+
+def update_field(user, field, data):
+  if field == 'password':
+    pattern = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)"
+    if (re.search(pattern, data['new_password'])):
+      user.update(password = generate_password_hash(
+        data["new_password"], method='pbkdf2:sha1', salt_length=8))
+      return True
+    else:
+      return False
+  elif field == 'first_name':
+    user.update(first_name = data['new_first_name'])
+  elif field == 'last_name':
+     user.update(last_name = data['new_last_name'])  
+  else:
+     user.update(contact = data['new_contact'])
+  return True
+
+
 
 @server.route('/ping')
 def test():
@@ -119,9 +142,7 @@ def add_report(reportType: models.ReportTypes):
   Add a new report to the database
   """
   data = validate_json(request.form.get('payload'), schemas.REPORT)
-  jwt_payload = jwt.decode(request.headers['Authorization'].split()[1], server.config['SECRET_KEY'], algorithms="HS256")
-  user_id = ObjectId(jwt_payload['user_id'])
-  #print(type(user_id))
+  user_id = get_user_id_from_token()
   image_file = request.files.get('image')
   image_ext = image_file.filename.split(".")[-1]
   image_id = str(uuid.uuid4()) + '.' + image_ext
@@ -141,6 +162,7 @@ def add_report(reportType: models.ReportTypes):
   return Response(report.to_json(), mimetype='application/json')
 
 @server.route('/reports', methods=["GET"])
+@token_required
 def get_all_reports():
   """
   Retrieve all reports in the system
@@ -207,6 +229,7 @@ def register():
         password=hashedPassword,
         first_name=data["first_name"],
         last_name=data["last_name"], 
+        contact = data['contact']
     )
     user.save()
     return jsonify(message="User added sucessfully"), 201
@@ -242,6 +265,40 @@ def showDB():
     dbCheck.append(user)
 
   return jsonify(dbCheck)
+
+
+@server.route("/me/update/<field>", methods=['POST'])
+@token_required
+def update(field): 
+  if field not in ['password','first_name','last_name','contact']:
+    return jsonify("invalid field"), 400
+
+  user_id = get_user_id_from_token()
+  data = dict(request.form)
+  user = models.User.objects.get(id = user_id)
+  if(check_password_hash(user.password, data['password'])):
+    msg = update_field(user, field, data)
+    if msg:
+      return jsonify("success"), 200
+    else:
+      return jsonify("invalid password"), 400
+  
+  return jsonify("wrong password"), 401 
+
+
+@server.route("/me/info", methods=["GET"])
+@token_required
+def get_user():
+  user_id = get_user_id_from_token() 
+  user = models.User.objects.get(id= user_id)
+  return jsonify({'email':user.email, 'first_name':user.first_name, 'last_name':user.last_name, 'contact':user.contact}),200
+
+@server.route("/me/reports", methods=["GET"])
+@token_required
+def myReports():
+  user_id = get_user_id_from_token()
+  reports = models.Report.objects.get(creator = user_id)
+  return jsonify(reports), 200 
 
 
 @server.route("/test", methods=['POST', 'GET'])

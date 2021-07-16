@@ -50,6 +50,9 @@ REGISTER = {
         'last_name' :{
             'type':'string',
         },
+         'contact' :{
+            'type':'string',
+        },
     },
-    'required':['email','password']
+    'required':['email','password','contact']
 }
