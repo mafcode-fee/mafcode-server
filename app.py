@@ -1,6 +1,7 @@
 from datetime import datetime
 import jwt
 from flask import Flask, request, jsonify
+import mongoengine
 import pymongo
 import urllib
 import os
@@ -98,11 +99,11 @@ def update_field(user, field, data):
     else:
       return False
   elif field == 'first_name':
-    user.update(first_name = data['new_first_name'])
+    user.update(first_name = data['first_name'])
   elif field == 'last_name':
-     user.update(last_name = data['new_last_name'])  
-  else:
-     user.update(contact = data['new_contact'])
+     user.update(last_name = data['last_name'])  
+  elif field == 'contact':
+     user.update(contact = data['contact'])
   return True
 
 
@@ -286,18 +287,61 @@ def update(field):
   return jsonify("wrong password"), 401 
 
 
+@server.route("/me/update_photo", methods=['POST'])
+@token_required
+def update_user_photo():
+  user_id = get_user_id_from_token()
+  user = models.User.objects.get(id = user_id)
+  image_file = request.files.get('image')
+  image_ext = image_file.filename.split(".")[-1]
+  image_id = str(uuid.uuid4()) + '.' + image_ext
+  image_file.save(os.path.join(FILES_DIR, image_id))
+  user.update(photo_id=image_id)
+  
+  return jsonify("success"), 200
+
+
+@server.route("/me/update", methods=['POST'])
+@token_required
+def update_user_info(): 
+  user_id = get_user_id_from_token()
+  data = dict(request.form)
+  user = models.User.objects.get(id = user_id)
+  if 'new_password' in data:
+    if 'password' not in data:
+      return jsonify("old password not provided"), 401 
+    if not check_password_hash(user.password, data['password']):
+      return jsonify("old password doesn't match"), 401 
+    
+
+  for field in data:
+    if not update_field(user, field, data):
+      return jsonify("invalid password"), 400
+
+  return jsonify("success"), 200
+
+
 @server.route("/me/info", methods=["GET"])
 @token_required
 def get_user():
   user_id = get_user_id_from_token() 
   user = models.User.objects.get(id= user_id)
-  return jsonify({'email':user.email, 'first_name':user.first_name, 'last_name':user.last_name, 'contact':user.contact}),200
+  return jsonify({
+      'email': user.email,
+      'first_name': user.first_name,
+      'last_name': user.last_name,
+      'contact': user.contact,
+      'photo_id': user.photo_id,
+  }), 200
 
 @server.route("/me/reports", methods=["GET"])
 @token_required
 def myReports():
   user_id = get_user_id_from_token()
-  reports = models.Report.objects.get(creator = user_id)
+  try:
+    reports = models.Report.objects.get(creator = user_id)
+  except mongoengine.DoesNotExist:
+    reports = []
   return jsonify(reports), 200 
 
 

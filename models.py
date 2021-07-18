@@ -11,6 +11,7 @@ class User(good_mongo.Document):
   first_name = mongo.StringField()
   last_name = mongo.StringField()
   contact = mongo.StringField()
+  photo_id = mongo.StringField()
 
 class Person(good_mongo.Document):
   encodeing_hash = mongo.StringField()
