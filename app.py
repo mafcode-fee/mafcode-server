@@ -104,6 +104,8 @@ def update_field(user, field, data):
      user.update(last_name = data['last_name'])  
   elif field == 'contact':
      user.update(contact = data['contact'])
+  elif field == 'email':
+     user.update(email = data['email'])
   return True
 
 
@@ -298,7 +300,7 @@ def update_user_photo():
   image_file.save(os.path.join(FILES_DIR, image_id))
   user.update(photo_id=image_id)
   
-  return jsonify("success"), 200
+  return jsonify(photo_id=image_id), 200
 
 
 @server.route("/me/update", methods=['POST'])
@@ -307,7 +309,7 @@ def update_user_info():
   user_id = get_user_id_from_token()
   data = dict(request.form)
   user = models.User.objects.get(id = user_id)
-  if 'new_password' in data:
+  if 'new_password' in data or 'email' in data:
     if 'password' not in data:
       return jsonify("old password not provided"), 401 
     if not check_password_hash(user.password, data['password']):
