@@ -282,7 +282,7 @@ def update(field):
   if(check_password_hash(user.password, data['password'])):
     msg = update_field(user, field, data)
     if msg:
-      return jsonify("success"), 200
+      return jsonify(user_info_dict(user)), 200
     else:
       return jsonify("invalid password"), 400
   
@@ -320,21 +320,24 @@ def update_user_info():
     if not update_field(user, field, data):
       return jsonify("invalid password"), 400
 
-  return jsonify("success"), 200
+  return jsonify(user_info_dict(user)), 200
 
+
+def user_info_dict(user):
+  return {
+      'email': user.email,
+      'first_name': user.first_name,
+      'last_name': user.last_name,
+      'contact': user.contact,
+      'photo_id': user.photo_id,
+  }
 
 @server.route("/me/info", methods=["GET"])
 @token_required
 def get_user():
   user_id = get_user_id_from_token() 
   user = models.User.objects.get(id= user_id)
-  return jsonify({
-      'email': user.email,
-      'first_name': user.first_name,
-      'last_name': user.last_name,
-      'contact': user.contact,
-      'photo_id': user.photo_id,
-  }), 200
+  return jsonify(user_info_dict(user)), 200
 
 @server.route("/me/reports", methods=["GET"])
 @token_required
