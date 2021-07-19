@@ -100,12 +100,16 @@ def update_field(user, field, data):
       return False
   elif field == 'first_name':
     user.update(first_name = data['first_name'])
+    user.first_name = data['first_name']
   elif field == 'last_name':
-     user.update(last_name = data['last_name'])  
+     user.update(last_name = data['last_name'])
+     user.last_name = data['last_name']
   elif field == 'contact':
      user.update(contact = data['contact'])
+     user.contact = data['contact']
   elif field == 'email':
      user.update(email = data['email'])
+     user.email = data['email']
   return True
 
 
