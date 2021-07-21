@@ -350,7 +350,7 @@ def get_user():
 def myReports():
     user_id = get_user_id_from_token()
     try:
-        reports = models.Report.objects.get(creator=user_id)
+        reports = models.Report.objects(creator=user_id)
     except mongoengine.DoesNotExist:
         reports = []
     return jsonify(reports), 200
