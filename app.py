@@ -119,7 +119,7 @@ def test():
     """
     Test the availability of the server
     """
-    return "pong"
+    return "pong ci is working"
 
 @server.route('/img/<image_id>', methods=["GET"])
 def img(image_id):
