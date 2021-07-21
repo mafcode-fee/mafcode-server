@@ -30,6 +30,6 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            (git fetch origin && git -C mafcode-server reset --hard origin/master) || git clone git@github.com:TarekkMA/mafcode-server.git mafcode-server
+            (git -C mafcode-server fetch origin && git -C mafcode-server reset --hard origin/master) || git clone git@github.com:TarekkMA/mafcode-server.git mafcode-server
             cd mafcode-server
             ./scripts/run-with-docker-compose.sh
