@@ -353,7 +353,7 @@ def myReports():
         reports = models.Report.objects(creator=user_id)
     except mongoengine.DoesNotExist:
         reports = []
-    return jsonify(reports), 200
+    return Response(reports.to_json(), mimetype='application/json')
 
 
 @server.route("/test", methods=['POST', 'GET'])
