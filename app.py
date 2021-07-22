@@ -276,6 +276,12 @@ def showDB():
     return jsonify(dbCheck)
 
 
+@server.route("/user/<userId>", methods=["GET"])
+@token_required
+def get_user_by_id(userId):
+    user = models.User.objects.get(id=userId)
+    return Response(user.to_json, 200)
+
 @server.route("/me/update/<field>", methods=['POST'])
 @token_required
 def update(field):
