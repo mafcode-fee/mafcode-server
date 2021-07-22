@@ -178,12 +178,23 @@ def get_all_reports():
     return Response(reports.to_json(), mimetype='application/json')
 
 @server.route('/reports/<report_id>', methods=["GET"])
+@token_required
 def get_report(report_id):
     """
     Retrieve report by its id
     """
     report = models.Report.objects.get(id=report_id)
     return Response(report.to_json(), mimetype='application/json')
+
+@server.route('/reports/<report_id>', methods=["DELETE"])
+@token_required
+def delete_report(report_id):
+    """
+    Delete report by its id
+    """
+    user_id = get_user_id_from_token()
+    models.Report.objects.get(id=report_id, creator=user_id).delete()
+    return jsonify(message="Report deleted sucessfully")
 
 @server.route('/reports/<report_id>/matchings', methods=["GET"])
 def get_matching_reports(report_id):
