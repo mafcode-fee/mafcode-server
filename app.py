@@ -280,7 +280,7 @@ def showDB():
 @token_required
 def get_user_by_id(userId):
     user = models.User.objects.get(id=userId)
-    return Response(user.to_json, 200)
+    return Response(user.to_json(), 200)
 
 @server.route("/me/update/<field>", methods=['POST'])
 @token_required
